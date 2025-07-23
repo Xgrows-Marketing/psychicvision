@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Reports Dashboard</title>
+    <title>Event Performance Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         * {
@@ -13,394 +14,359 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            line-height: 1.6;
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
         
         .header {
-            background: #2563eb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 24px;
+            padding: 30px;
             text-align: center;
         }
         
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
         }
         
-        .upload-box {
-            padding: 32px;
+        .upload-section {
+            padding: 30px;
             text-align: center;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #f0f0f0;
         }
         
-        .url-input {
-            width: 100%;
-            max-width: 500px;
-            padding: 12px 16px;
-            border: 2px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .url-input:focus {
-            outline: none;
-            border-color: #2563eb;
-        }
-        
-        .load-btn {
-            background: #2563eb;
+        .file-upload {
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.3s;
         }
         
-        .load-btn:hover {
-            background: #1d4ed8;
+        .file-upload:hover {
+            transform: translateY(-2px);
         }
         
-        .load-btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
+        .file-upload input {
+            position: absolute;
+            left: -9999px;
         }
         
-        .instructions {
-            margin-top: 20px;
-            padding: 16px;
-            background: #f3f4f6;
-            border-radius: 8px;
-            text-align: left;
-        }
-        
-        .instructions h3 {
-            color: #374151;
-            margin-bottom: 12px;
-        }
-        
-        .instructions ol {
-            color: #6b7280;
-            padding-left: 20px;
-        }
-        
-        .instructions li {
-            margin-bottom: 4px;
-        }
-        
-        .reports {
-            display: none;
-            padding: 32px;
-        }
-        
-        .summary-cards {
+        .metrics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 32px;
+            padding: 30px;
         }
         
-        .card {
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         
-        .card-value {
-            font-size: 24px;
+        .metric-card.blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .metric-card.green { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); }
+        .metric-card.orange { background: linear-gradient(135deg, #ff8a00 0%, #e52e71 100%); }
+        .metric-card.purple { background: linear-gradient(135deg, #8360c3 0%, #2ebf91 100%); }
+        
+        .metric-value {
+            font-size: 2.5rem;
             font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
         
-        .card-label {
-            font-size: 14px;
-            color: #6b7280;
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
         
-        .data-table {
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
             background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 25px;
         }
         
-        .table-header {
-            background: #f9fafb;
-            padding: 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .table-header h3 {
-            color: #1f2937;
-            font-size: 18px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        
-        th {
-            background: #f9fafb;
+        .chart-title {
+            font-size: 1.3rem;
             font-weight: 600;
-            color: #374151;
-            font-size: 14px;
+            margin-bottom: 20px;
+            color: #333;
         }
         
-        td {
-            color: #6b7280;
+        .hidden {
+            display: none;
         }
         
-        .event-name {
-            font-weight: 500;
-            color: #1f2937;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .error-msg {
-            background: #fef2f2;
-            color: #dc2626;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 16px;
-            border: 1px solid #fecaca;
-        }
-        
-        .success-msg {
-            background: #f0fdf4;
-            color: #16a34a;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 16px;
-            border: 1px solid #bbf7d0;
+        @media (max-width: 768px) {
+            .charts {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Event Reports</h1>
-            <p>Load your CSV data from GitHub and view performance reports</p>
+            <h1>📊 Event Performance Dashboard</h1>
+            <p>Weekly Performance Analytics</p>
         </div>
         
-        <div class="upload-box">
-            <input type="url" 
-                   id="githubUrl" 
-                   class="url-input" 
-                   placeholder="Paste your GitHub CSV raw URL here...">
-            
+        <div class="upload-section">
+            <input type="text" id="githubUrl" placeholder="Paste the URL here" 
+                   style="width: 100%; max-width: 500px; padding: 12px 20px; border: 2px solid #e0e0e0; border-radius: 25px; font-size: 16px; margin-bottom: 15px; outline: none;">
             <br>
-            
-            <button onclick="loadData()" class="load-btn" id="loadBtn">
-                Load Data
+            <button class="file-upload" onclick="loadFromGitHub()" style="border: none; cursor: pointer;">
+                📊 Load Data
             </button>
-            
-            <div class="instructions">
-                <h3>How to get your GitHub CSV URL:</h3>
-                <ol>
-                    <li>Upload your CSV file to any GitHub repository</li>
-                    <li>Click on the CSV file in GitHub</li>
-                    <li>Click the <strong>"Raw"</strong> button</li>
-                    <li>Copy the URL from your browser</li>
-                    <li>Paste it above and click "Load Data"</li>
-                </ol>
-            </div>
-            
-            <div id="message"></div>
         </div>
         
-        <div class="reports" id="reports">
-            <div class="summary-cards">
-                <div class="card">
-                    <div class="card-value" id="totalSpend">£0</div>
-                    <div class="card-label">Total Ad Spend</div>
+        <div id="dashboard" class="hidden">
+            <div class="metrics">
+                <div class="metric-card blue">
+                    <div class="metric-value" id="totalSpend">£0.00</div>
+                    <div class="metric-label">Total Ad Spend</div>
                 </div>
-                <div class="card">
-                    <div class="card-value" id="totalTickets">0</div>
-                    <div class="card-label">Tickets Sold</div>
+                <div class="metric-card green">
+                    <div class="metric-value" id="totalTickets">0</div>
+                    <div class="metric-label">Tickets Sold (+8-12%)</div>
+                    <div style="font-size: 0.7rem; opacity: 0.8; margin-top: 5px;">Due to Meta's attribution</div>
                 </div>
-                <div class="card">
-                    <div class="card-value" id="avgCost">£0</div>
-                    <div class="card-label">Average Cost per Ticket</div>
+                <div class="metric-card purple">
+                    <div class="metric-value" id="totalClicks">0</div>
+                    <div class="metric-label">Total Link Clicks</div>
                 </div>
-                <div class="card">
-                    <div class="card-value" id="totalClicks">0</div>
-                    <div class="card-label">Total Link Clicks</div>
+                <div class="metric-card orange">
+                    <div class="metric-value" id="avgCost">£0.00</div>
+                    <div class="metric-label">Avg Cost/Ticket</div>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);">
+                    <div class="metric-value" id="totalAllClicks">0</div>
+                    <div class="metric-label">Clicks (All)</div>
                 </div>
             </div>
             
-            <div class="data-table">
-                <div class="table-header">
-                    <h3>Event Performance Details</h3>
+            <div class="charts">
+                <div class="chart-container">
+                    <div class="chart-title">Top 5 Events by Tickets Sold</div>
+                    <canvas id="ticketsChart"></canvas>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Event Name</th>
-                            <th>Ad Spend</th>
-                            <th>Tickets Sold</th>
-                            <th>Cost per Ticket</th>
-                            <th>Link Clicks</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTable">
-                    </tbody>
-                </table>
+                <div class="chart-container">
+                    <div class="chart-title">Ad Spend vs Tickets Sold Performance</div>
+                    <canvas id="spendChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        async function loadData() {
+        let eventData = [];
+        let charts = {};
+
+        function loadFromGitHub() {
             const url = document.getElementById('githubUrl').value.trim();
-            const btn = document.getElementById('loadBtn');
-            const messageDiv = document.getElementById('message');
-            
-            // Clear previous messages
-            messageDiv.innerHTML = '';
-            
             if (!url) {
-                showMessage('Please enter a GitHub CSV URL', 'error');
+                alert('Please enter a GitHub CSV raw URL');
                 return;
             }
-            
-            // Show loading state
-            btn.disabled = true;
-            btn.textContent = 'Loading...';
-            
-            try {
-                // Convert regular GitHub URL to raw URL if needed
-                let rawUrl = url;
-                if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
-                    rawUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-                }
-                
-                // Load CSV data
-                const response = await fetch(rawUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
-                }
-                
-                const csvText = await response.text();
-                
-                // Parse CSV
-                Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.data && results.data.length > 0) {
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch CSV data');
+                    }
+                    return response.text();
+                })
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
                             processData(results.data);
-                            showReports();
-                            showMessage('✅ Data loaded successfully!', 'success');
-                        } else {
-                            throw new Error('No data found in CSV file');
+                            showDashboard();
+                        }
+                    });
+                })
+                .catch(error => {
+                    alert('Error loading CSV: ' + error.message);
+                });
+        }
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processData(results.data);
+                    showDashboard();
+                }
+            });
+        }
+
+        function processData(data) {
+            eventData = data.map(row => ({
+                eventName: row['Ad Set Name'] || '',
+                adSpent: parseFloat(row['Amount spent (GBP)']) || 0,
+                ticketsSold: parseFloat(row['Tickets Sold']) || 0,
+                linkClicks: parseInt(row['Link clicks']) || 0,
+                allClicks: parseInt(row['Clicks (all)']) || 0,
+                costPerTicket: parseFloat(row['Cost Per Ticket']) || 0,
+                ctr: parseFloat(row['CTR (link click-through rate)']) || 0
+            })).filter(event => event.eventName);
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboard').classList.remove('hidden');
+            updateMetrics();
+            createCharts();
+        }
+
+        function updateMetrics() {
+            const totals = eventData.reduce((acc, event) => ({
+                totalSpend: acc.totalSpend + event.adSpent,
+                totalTickets: acc.totalTickets + event.ticketsSold,
+                totalClicks: acc.totalClicks + event.linkClicks,
+                totalAllClicks: acc.totalAllClicks + event.allClicks
+            }), { totalSpend: 0, totalTickets: 0, totalClicks: 0, totalAllClicks: 0 });
+
+            const avgCost = totals.totalTickets > 0 ? totals.totalSpend / totals.totalTickets : 0;
+
+            document.getElementById('totalSpend').textContent = `£${totals.totalSpend.toFixed(2)}`;
+            document.getElementById('totalTickets').textContent = totals.totalTickets.toFixed(1);
+            document.getElementById('avgCost').textContent = `£${avgCost.toFixed(2)}`;
+            document.getElementById('totalClicks').textContent = totals.totalClicks;
+            document.getElementById('totalAllClicks').textContent = totals.totalAllClicks;
+        }
+
+        function createCharts() {
+            const topEvents = [...eventData]
+                .filter(event => event.ticketsSold > 0)
+                .sort((a, b) => b.ticketsSold - a.ticketsSold)
+                .slice(0, 5);
+
+            // Tickets Chart
+            const ticketsCtx = document.getElementById('ticketsChart').getContext('2d');
+            if (charts.tickets) charts.tickets.destroy();
+            
+            charts.tickets = new Chart(ticketsCtx, {
+                type: 'bar',
+                data: {
+                    labels: topEvents.map(e => e.eventName.replace('Event: ', '').substring(0, 20) + '...'),
+                    datasets: [{
+                        label: 'Tickets Sold',
+                        data: topEvents.map(e => e.ticketsSold),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Ad Spend vs Performance Chart - Scatter plot
+            const spendCtx = document.getElementById('spendChart').getContext('2d');
+            if (charts.spend) charts.spend.destroy();
+            
+            // Filter events with meaningful data for scatter plot
+            const performanceData = eventData.filter(event => 
+                event.adSpent > 0 && event.ticketsSold > 0
+            ).map(event => ({
+                x: event.adSpent,
+                y: event.ticketsSold,
+                label: event.eventName.replace('Event: ', '').substring(0, 15) + '...'
+            }));
+
+            charts.spend = new Chart(spendCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Events Performance',
+                        data: performanceData,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        pointHoverRadius: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Ad Spend (£)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tickets Sold'
+                            }
                         }
                     },
-                    error: function(error) {
-                        throw new Error('CSV parsing failed: ' + error.message);
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const event = performanceData[context.dataIndex];
+                                    return `${event.label}: £${context.parsed.x.toFixed(2)} → ${context.parsed.y} tickets`;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
                     }
-                });
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showMessage('❌ Error loading data: ' + error.message, 'error');
-            } finally {
-                // Reset button
-                btn.disabled = false;
-                btn.textContent = 'Load Data';
-            }
-        }
-        
-        function processData(data) {
-            // Process and calculate summary metrics
-            let totalSpend = 0;
-            let totalTickets = 0;
-            let totalClicks = 0;
-            const tableBody = document.getElementById('dataTable');
-            
-            // Clear existing table data
-            tableBody.innerHTML = '';
-            
-            data.forEach(row => {
-                const adSpent = parseFloat(row['Amount spent (GBP)']) || 0;
-                const ticketsSold = parseFloat(row['Tickets Sold']) || 0;
-                const linkClicks = parseInt(row['Link clicks']) || 0;
-                const costPerTicket = parseFloat(row['Cost Per Ticket']) || 0;
-                const eventName = row['Ad Set Name'] || 'Unknown Event';
-                
-                // Add to totals
-                totalSpend += adSpent;
-                totalTickets += ticketsSold;
-                totalClicks += linkClicks;
-                
-                // Add row to table
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="event-name" title="${eventName}">${eventName}</td>
-                    <td>£${adSpent.toFixed(2)}</td>
-                    <td>${ticketsSold.toFixed(0)}</td>
-                    <td>£${costPerTicket.toFixed(2)}</td>
-                    <td>${linkClicks}</td>
-                `;
-                tableBody.appendChild(tr);
+                }
             });
-            
-            // Update summary cards
-            const avgCost = totalTickets > 0 ? totalSpend / totalTickets : 0;
-            
-            document.getElementById('totalSpend').textContent = `£${totalSpend.toFixed(0)}`;
-            document.getElementById('totalTickets').textContent = totalTickets.toFixed(0);
-            document.getElementById('avgCost').textContent = `£${avgCost.toFixed(2)}`;
-            document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
         }
-        
-        function showReports() {
-            document.getElementById('reports').style.display = 'block';
-            document.getElementById('reports').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.innerHTML = `<div class="${type}-msg">${text}</div>`;
-        }
-        
-        // Allow Enter key to trigger load
-        document.getElementById('githubUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loadData();
-            }
-        });
     </script>
 </body>
 </html>
