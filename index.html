@@ -7,6 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -14,145 +16,306 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
             min-height: 100vh;
-            padding: 20px;
+            overflow-x: hidden;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+            padding: 40px 20px;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
             text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed, #ff006e);
+            border-radius: 1px;
         }
         
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #ff006e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: #a1a1aa;
+            font-weight: 400;
         }
         
         .upload-section {
-            padding: 30px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
             text-align: center;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .file-upload {
-            display: inline-block;
+            margin-bottom: 60px;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+        }
+        
+        .url-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            font-size: 16px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .url-input::placeholder {
+            color: #6b7280;
+        }
+        
+        .url-input:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .load-button {
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 16px;
             color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
-            cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            transition: transform 0.3s;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
         }
         
-        .file-upload:hover {
+        .load-button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.3);
         }
         
-        .file-upload input {
-            position: absolute;
-            left: -9999px;
+        .load-button:active {
+            transform: translateY(0);
         }
         
         .metrics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
         }
         
         .metric-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px 24px;
             text-align: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
         
-        .metric-card.blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .metric-card.green { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); }
-        .metric-card.orange { background: linear-gradient(135deg, #ff8a00 0%, #e52e71 100%); }
-        .metric-card.purple { background: linear-gradient(135deg, #8360c3 0%, #2ebf91 100%); }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient);
+        }
+        
+        .metric-card.blue {
+            --gradient: linear-gradient(90deg, #00d4ff, #0ea5e9);
+        }
+        
+        .metric-card.green {
+            --gradient: linear-gradient(90deg, #10b981, #06d6a0);
+        }
+        
+        .metric-card.purple {
+            --gradient: linear-gradient(90deg, #7c3aed, #a855f7);
+        }
+        
+        .metric-card.orange {
+            --gradient: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+        
+        .metric-card.coral {
+            --gradient: linear-gradient(90deg, #ff6b6b, #feca57);
+        }
         
         .metric-value {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: #ffffff;
+            letter-spacing: -0.02em;
         }
         
         .metric-label {
             font-size: 0.9rem;
-            opacity: 0.9;
+            color: #a1a1aa;
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.05em;
+        }
+        
+        .metric-note {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 8px;
+            font-weight: 400;
         }
         
         .charts {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            padding: 30px;
-            margin-bottom: 30px;
+            gap: 40px;
+            margin-bottom: 40px;
         }
         
         .chart-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.5), transparent);
         }
         
         .chart-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
+            margin-bottom: 24px;
+            color: #ffffff;
+            letter-spacing: -0.01em;
         }
         
         .hidden {
             display: none;
         }
         
+        .glow {
+            position: fixed;
+            top: 20%;
+            left: 10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .glow:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            left: auto;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+            animation-delay: -3s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+        
         @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
             .charts {
                 grid-template-columns: 1fr;
+                gap: 24px;
             }
             
             .metrics {
                 grid-template-columns: 1fr;
             }
+            
+            .container {
+                padding: 20px 16px;
+            }
+            
+            .upload-section {
+                padding: 24px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="glow"></div>
+    <div class="glow"></div>
+    
     <div class="container">
         <div class="header">
-            <h1>📊 Event Performance Dashboard</h1>
-            <p>Weekly Performance Analytics</p>
+            <h1>Event Performance Dashboard</h1>
+            <p>Weekly/Monthly Performance Analytics</p>
         </div>
         
         <div class="upload-section">
-            <input type="text" id="githubUrl" placeholder="Paste the URL here" 
-                   style="width: 100%; max-width: 500px; padding: 12px 20px; border: 2px solid #e0e0e0; border-radius: 25px; font-size: 16px; margin-bottom: 15px; outline: none;">
+            <input type="text" id="githubUrl" class="url-input" placeholder="Paste the URL here">
             <br>
-            <button class="file-upload" onclick="loadFromGitHub()" style="border: none; cursor: pointer;">
+            <button class="load-button" onclick="loadFromGitHub()">
                 📊 Load Data
             </button>
         </div>
@@ -166,7 +329,7 @@
                 <div class="metric-card green">
                     <div class="metric-value" id="totalTickets">0</div>
                     <div class="metric-label">Tickets Sold (+8-12%)</div>
-                    <div style="font-size: 0.7rem; opacity: 0.8; margin-top: 5px;">Due to Meta's attribution</div>
+                    <div class="metric-note">Due to Meta's attribution</div>
                 </div>
                 <div class="metric-card purple">
                     <div class="metric-value" id="totalClicks">0</div>
@@ -176,7 +339,7 @@
                     <div class="metric-value" id="avgCost">£0.00</div>
                     <div class="metric-label">Avg Cost/Ticket</div>
                 </div>
-                <div class="metric-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);">
+                <div class="metric-card coral">
                     <div class="metric-value" id="totalAllClicks">0</div>
                     <div class="metric-label">Clicks (All)</div>
                 </div>
@@ -228,20 +391,6 @@
                 });
         }
 
-        function handleFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    processData(results.data);
-                    showDashboard();
-                }
-            });
-        }
-
         function processData(data) {
             eventData = data.map(row => ({
                 eventName: row['Ad Set Name'] || '',
@@ -283,6 +432,11 @@
                 .sort((a, b) => b.ticketsSold - a.ticketsSold)
                 .slice(0, 5);
 
+            // Configure Chart.js defaults for dark theme
+            Chart.defaults.color = '#a1a1aa';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+            Chart.defaults.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+
             // Tickets Chart
             const ticketsCtx = document.getElementById('ticketsChart').getContext('2d');
             if (charts.tickets) charts.tickets.destroy();
@@ -294,15 +448,31 @@
                     datasets: [{
                         label: 'Tickets Sold',
                         data: topEvents.map(e => e.ticketsSold),
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 2
+                        backgroundColor: 'rgba(0, 212, 255, 0.8)',
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true }
+                        y: { 
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
                     }
                 }
             });
@@ -311,7 +481,6 @@
             const spendCtx = document.getElementById('spendChart').getContext('2d');
             if (charts.spend) charts.spend.destroy();
             
-            // Filter events with meaningful data for scatter plot
             const performanceData = eventData.filter(event => 
                 event.adSpent > 0 && event.ticketsSold > 0
             ).map(event => ({
@@ -326,8 +495,8 @@
                     datasets: [{
                         label: 'Events Performance',
                         data: performanceData,
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(124, 58, 237, 0.8)',
+                        borderColor: 'rgba(124, 58, 237, 1)',
                         borderWidth: 2,
                         pointRadius: 8,
                         pointHoverRadius: 12
@@ -335,33 +504,46 @@
                 },
                 options: {
                     responsive: true,
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Ad Spend (£)'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Tickets Sold'
-                            }
-                        }
-                    },
                     plugins: {
+                        legend: {
+                            display: false
+                        },
                         tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#a1a1aa',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
                             callbacks: {
                                 label: function(context) {
                                     const event = performanceData[context.dataIndex];
                                     return `${event.label}: £${context.parsed.x.toFixed(2)} → ${context.parsed.y} tickets`;
                                 }
                             }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Ad Spend (£)',
+                                color: '#a1a1aa'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
                         },
-                        legend: {
-                            display: false
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tickets Sold',
+                                color: '#a1a1aa'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
                         }
                     }
                 }
