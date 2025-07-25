@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Proximity Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .venue-section {
+            margin-bottom: 30px;
+        }
+
+        .venue-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .venue-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .venue-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+
+        .venue-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .venue-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .venue-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #ff3742;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e8ed;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-success {
+            background: #2ed573;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1dd65a;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .results-content {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            border: 2px solid #667eea;
+            border-top: none;
+        }
+
+        .distance-pair {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .distance-pair.close {
+            background: #ffe6e6;
+            border-left: 5px solid #ff4757;
+        }
+
+        .distance-pair.medium {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+        }
+
+        .distance-pair.far {
+            background: #e6f7e6;
+            border-left: 5px solid #2ed573;
+        }
+
+        .venue-names {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .distance {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .distance.close {
+            color: #ff4757;
+        }
+
+        .distance.medium {
+            color: #ffc107;
+        }
+
+        .distance.far {
+            color: #2ed573;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #c92a2a;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 5px solid #ff4757;
+        }
+
+        .proximity-summary {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .proximity-summary h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        @media (max-width: 768px) {
+            .venue-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .distance-pair {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Venue Proximity Checker</h1>
+            <p>Add venue addresses and find which ones are within 10 miles of each other</p>
+        </div>
+
+        <div class="venue-section">
+            <div class="venue-grid" id="venueGrid">
+                <!-- Venue cards will be added here dynamically -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="addVenue()">+ Add Venue</button>
+            <button class="btn btn-primary" onclick="checkProximity()">Check Distances</button>
+            <button class="btn btn-success" onclick="clearAll()">Clear All</button>
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="results-header">
+                <h2>Distance Results</h2>
+            </div>
+            <div class="results-content" id="resultsContent">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let venues = [];
+        let venueCounter = 0;
+
+        // Initialize with 3 empty venues
+        function init() {
+            for (let i = 0; i < 3; i++) {
+                addVenue();
+            }
+        }
+
+        function addVenue() {
+            venueCounter++;
+            const venue = {
+                id: venueCounter,
+                name: `Venue ${venueCounter}`,
+                address: '',
+                coordinates: null
+            };
+            venues.push(venue);
+            renderVenues();
+        }
+
+        function removeVenue(id) {
+            venues = venues.filter(venue => venue.id !== id);
+            renderVenues();
+        }
+
+        function renderVenues() {
+            const grid = document.getElementById('venueGrid');
+            grid.innerHTML = '';
+
+            venues.forEach(venue => {
+                const card = document.createElement('div');
+                card.className = 'venue-card';
+                card.innerHTML = `
+                    <h3>${venue.name}</h3>
+                    <textarea 
+                        class="venue-input" 
+                        placeholder="Enter venue address (e.g., 123 Main St, New York, NY 10001)"
+                        oninput="updateVenueAddress(${venue.id}, this.value)"
+                    >${venue.address}</textarea>
+                    ${venues.length > 1 ? `<button class="remove-btn" onclick="removeVenue(${venue.id})">Remove</button>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateVenueAddress(id, address) {
+            const venue = venues.find(v => v.id === id);
+            if (venue) {
+                venue.address = address;
+                venue.coordinates = null; // Reset coordinates when address changes
+            }
+        }
+
+        async function geocodeAddress(address) {
+            try {
+                // Using Nominatim (OpenStreetMap) API - free and doesn't require API key
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    return {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                }
+                throw new Error('Address not found');
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                return null;
+            }
+        }
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 3959; // Earth's radius in miles
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function toRad(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        async function checkProximity() {
+            const validVenues = venues.filter(venue => venue.address.trim());
+            
+            if (validVenues.length < 2) {
+                alert('Please enter at least 2 venue addresses');
+                return;
+            }
+
+            // Show loading
+            const results = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            results.style.display = 'block';
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Geocoding addresses and calculating distances...</p>
+                </div>
+            `;
+
+            try {
+                // Geocode all addresses
+                for (let venue of validVenues) {
+                    if (!venue.coordinates) {
+                        venue.coordinates = await geocodeAddress(venue.address);
+                        // Add a small delay to be nice to the API
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+
+                // Check if any geocoding failed
+                const failedVenues = validVenues.filter(venue => !venue.coordinates);
+                if (failedVenues.length > 0) {
+                    resultsContent.innerHTML = `
+                        <div class="error">
+                            Failed to geocode the following addresses:
+                            <ul>
+                                ${failedVenues.map(venue => `<li>${venue.name}: ${venue.address}</li>`).join('')}
+                            </ul>
+                            Please check the addresses and try again.
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Calculate distances between all pairs
+                const distances = [];
+                const proximityPairs = [];
+
+                for (let i = 0; i < validVenues.length; i++) {
+                    for (let j = i + 1; j < validVenues.length; j++) {
+                        const venue1 = validVenues[i];
+                        const venue2 = validVenues[j];
+                        const distance = calculateDistance(
+                            venue1.coordinates.lat, venue1.coordinates.lng,
+                            venue2.coordinates.lat, venue2.coordinates.lng
+                        );
+
+                        const pair = {
+                            venue1: venue1.name,
+                            venue2: venue2.name,
+                            distance: distance
+                        };
+
+                        distances.push(pair);
+
+                        if (distance <= 10) {
+                            proximityPairs.push(pair);
+                        }
+                    }
+                }
+
+                // Display results
+                let html = '';
+
+                if (proximityPairs.length > 0) {
+                    html += `
+                        <div class="proximity-summary">
+                            <h3>⚠️ Found ${proximityPairs.length} venue pair(s) within 10 miles!</h3>
+                            <p>These venues might be too close to each other</p>
+                        </div>
+                    `;
+                }
+
+                distances.forEach(pair => {
+                    const distanceClass = pair.distance <= 10 ? 'close' : pair.distance <= 25 ? 'medium' : 'far';
+                    html += `
+                        <div class="distance-pair ${distanceClass}">
+                            <div class="venue-names">
+                                ${pair.venue1} ↔ ${pair.venue2}
+                            </div>
+                            <div class="distance ${distanceClass}">
+                                ${pair.distance.toFixed(1)} miles
+                            </div>
+                        </div>
+                    `;
+                });
+
+                resultsContent.innerHTML = html;
+
+            } catch (error) {
+                resultsContent.innerHTML = `
+                    <div class="error">
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function clearAll() {
+            venues = [];
+            venueCounter = 0;
+            document.getElementById('results').style.display = 'none';
+            init();
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
