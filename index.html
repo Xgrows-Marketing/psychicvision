@@ -86,9 +86,16 @@
             background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
         }
         
-        .url-input {
-            width: 100%;
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             max-width: 500px;
+            margin: 0 auto 30px;
+        }
+        
+        .url-input, .revenue-input {
+            width: 100%;
             padding: 16px 24px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -97,18 +104,39 @@
             color: #ffffff;
             outline: none;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
             font-family: 'Inter', sans-serif;
         }
         
-        .url-input::placeholder {
+        .revenue-input {
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .url-input::placeholder, .revenue-input::placeholder {
             color: #6b7280;
         }
         
-        .url-input:focus {
+        .url-input:focus, .revenue-input:focus {
             border-color: #00d4ff;
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
             background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .revenue-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .required-label {
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: -15px;
+            text-align: left;
+        }
+        
+        .required-asterisk {
+            color: #ef4444;
+            margin-left: 4px;
         }
         
         .load-button {
@@ -133,6 +161,12 @@
         
         .load-button:active {
             transform: translateY(0);
+        }
+        
+        .load-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .metrics {
@@ -188,6 +222,14 @@
         
         .metric-card.coral {
             --gradient: linear-gradient(90deg, #ff6b6b, #feca57);
+        }
+        
+        .metric-card.emerald {
+            --gradient: linear-gradient(90deg, #059669, #34d399);
+        }
+        
+        .metric-card.rose {
+            --gradient: linear-gradient(90deg, #e11d48, #f43f5e);
         }
         
         .metric-value {
@@ -313,10 +355,15 @@
         </div>
         
         <div class="upload-section">
-            <input type="text" id="githubUrl" class="url-input" placeholder="Paste the URL here">
-            <br>
+            <div class="input-group">
+                <input type="text" id="githubUrl" class="url-input" placeholder="Paste the CSV data URL here">
+                <div>
+                    <div class="required-label">Total Revenue <span class="required-asterisk">*</span></div>
+                    <input type="number" id="totalRevenue" class="revenue-input" placeholder="Enter total revenue (e.g., 15000)" step="0.01" min="0" required>
+                </div>
+            </div>
             <button class="load-button" onclick="loadFromGitHub()">
-                📊 Load Data
+                📊 Load Data & Calculate Metrics
             </button>
         </div>
         
@@ -330,6 +377,10 @@
                     <div class="metric-value" id="totalTickets">0</div>
                     <div class="metric-label">Attributed Tickets Sold</div>
                 </div>
+                <div class="metric-card emerald">
+                    <div class="metric-value" id="totalRevenue">£0.00</div>
+                    <div class="metric-label">Total Revenue</div>
+                </div>
                 <div class="metric-card purple">
                     <div class="metric-value" id="totalClicks">0</div>
                     <div class="metric-label">Total Link Clicks</div>
@@ -337,6 +388,10 @@
                 <div class="metric-card orange">
                     <div class="metric-value" id="avgCost">£0.00</div>
                     <div class="metric-label">Avg Cost/Ticket</div>
+                </div>
+                <div class="metric-card rose">
+                    <div class="metric-value" id="roi">0%</div>
+                    <div class="metric-label">Return on Investment</div>
                 </div>
                 <div class="metric-card coral">
                     <div class="metric-value" id="totalAllClicks">0</div>
@@ -360,13 +415,24 @@
     <script>
         let eventData = [];
         let charts = {};
+        let totalRevenue = 0;
 
         function loadFromGitHub() {
             const url = document.getElementById('githubUrl').value.trim();
+            const revenueInput = document.getElementById('totalRevenue').value.trim();
+            
             if (!url) {
-                alert('Please enter a GitHub CSV raw URL');
+                alert('Please enter a CSV data URL');
                 return;
             }
+            
+            if (!revenueInput || parseFloat(revenueInput) <= 0) {
+                alert('Please enter a valid revenue amount');
+                document.getElementById('totalRevenue').focus();
+                return;
+            }
+            
+            totalRevenue = parseFloat(revenueInput);
 
             fetch(url)
                 .then(response => {
@@ -417,12 +483,16 @@
             }), { totalSpend: 0, totalTickets: 0, totalClicks: 0, totalAllClicks: 0 });
 
             const avgCost = totals.totalTickets > 0 ? totals.totalSpend / totals.totalTickets : 0;
+            const profit = totalRevenue - totals.totalSpend;
+            const roi = totals.totalSpend > 0 ? ((profit / totals.totalSpend) * 100) : 0;
 
             document.getElementById('totalSpend').textContent = `£${totals.totalSpend.toFixed(2)}`;
             document.getElementById('totalTickets').textContent = totals.totalTickets.toFixed(1);
+            document.getElementById('totalRevenue').textContent = `£${totalRevenue.toFixed(2)}`;
             document.getElementById('avgCost').textContent = `£${avgCost.toFixed(2)}`;
             document.getElementById('totalClicks').textContent = totals.totalClicks;
             document.getElementById('totalAllClicks').textContent = totals.totalAllClicks;
+            document.getElementById('roi').textContent = `${roi.toFixed(1)}%`;
         }
 
         function createCharts() {
