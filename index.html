@@ -474,7 +474,10 @@
                 linkClicks: parseInt(row['Link clicks']) || 0,
                 allClicks: parseInt(row['Clicks (all)']) || 0,
                 costPerTicket: parseFloat(row['Cost Per Ticket']) || 0,
-                ctr: parseFloat(row['CTR (link click-through rate)']) || 0
+                ctr: parseFloat(row['CTR (link click-through rate)']) || 0,
+                purchaseValue: parseFloat(row['Purchase ROAS (return on ad spend)']) * parseFloat(row['Amount spent (GBP)']) || 
+                              parseFloat(row['Purchase conversion value']) || 
+                              parseFloat(row['Purchase value']) || 0
             })).filter(event => event.eventName);
         }
 
@@ -489,15 +492,15 @@
                 totalSpend: acc.totalSpend + event.adSpent,
                 totalTickets: acc.totalTickets + event.ticketsSold,
                 totalClicks: acc.totalClicks + event.linkClicks,
-                totalAllClicks: acc.totalAllClicks + event.allClicks
-            }), { totalSpend: 0, totalTickets: 0, totalClicks: 0, totalAllClicks: 0 });
+                totalAllClicks: acc.totalAllClicks + event.allClicks,
+                totalPurchaseValue: acc.totalPurchaseValue + event.purchaseValue
+            }), { totalSpend: 0, totalTickets: 0, totalClicks: 0, totalAllClicks: 0, totalPurchaseValue: 0 });
 
             const avgCost = totals.totalTickets > 0 ? totals.totalSpend / totals.totalTickets : 0;
             
             // Calculate revenue breakdown
-            const avgTicketPrice = totals.totalTickets > 0 ? totalRevenue / totals.totalTickets : 0;
-            const attributedRevenue = totals.totalTickets * avgTicketPrice;
-            const estimatedMetaRevenue = attributedRevenue * 1.08; // Add 8% to attributed
+            const metaAttributedRevenue = totals.totalPurchaseValue; // Actual purchase conversion value from Meta
+            const estimatedMetaRevenue = metaAttributedRevenue * 1.08; // Add 8% to attributed
             const estimatedOrganicRevenue = totalRevenue - estimatedMetaRevenue;
             
             const profit = totalRevenue - totals.totalSpend;
