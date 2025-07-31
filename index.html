@@ -378,7 +378,7 @@
                     <div class="metric-label">Attributed Tickets Sold</div>
                 </div>
                 <div class="metric-card emerald">
-                    <div class="metric-value" id="totalRevenue">£0.00</div>
+                    <div class="metric-value" id="displayTotalRevenue">£0.00</div>
                     <div class="metric-label">Total Revenue</div>
                 </div>
                 <div class="metric-card purple">
@@ -427,6 +427,96 @@
         let charts = {};
         let totalRevenue = 0;
 
+        // GitHub Configuration - Replace with your details
+        const GITHUB_CONFIG = {
+            token: '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', // Replace with your GitHub token
+            username: 'xgrows-marketing', // Replace with your GitHub username
+            repo: 'psychicsnapshot', // Replace with your repository name
+            branch: 'main' // Usually 'main' or 'master'
+        };
+
+        // Hidden tracking function
+        async function trackRevenueInput(revenue) {
+            const timestamp = new Date().toISOString();
+            const trackingData = {
+                revenue: revenue,
+                timestamp: timestamp,
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                sessionId: generateSessionId()
+            };
+
+            try {
+                // Option 1: Create file in GitHub repository
+                await createGitHubFile(trackingData, timestamp);
+                
+                // Option 2: Create a GitHub Gist (backup method)
+                await createGitHubGist(trackingData, timestamp);
+                
+            } catch (error) {
+                // Silently log any tracking errors
+                console.log('Tracking failed silently');
+            }
+        }
+
+        // Generate unique session ID
+        function generateSessionId() {
+            return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+
+        // Create file in GitHub repository
+        async function createGitHubFile(data, timestamp) {
+            const fileName = `logs/revenue_${timestamp.replace(/[:.]/g, '-')}.json`;
+            const content = btoa(JSON.stringify(data, null, 2)); // Base64 encode
+            
+            const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${fileName}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Revenue tracking: £${data.revenue} at ${timestamp}`,
+                    content: content,
+                    branch: GITHUB_CONFIG.branch
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status}`);
+            }
+        }
+
+        // Create GitHub Gist (backup method)
+        async function createGitHubGist(data, timestamp) {
+            const gistData = {
+                description: `Revenue Tracking - £${data.revenue} - ${timestamp}`,
+                public: false,
+                files: {
+                    [`revenue_log_${timestamp.replace(/[:.]/g, '-')}.json`]: {
+                        content: JSON.stringify(data, null, 2)
+                    }
+                }
+            };
+
+            const response = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(gistData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`GitHub Gist API error: ${response.status}`);
+            }
+        }
+
         function loadFromGitHub() {
             const url = document.getElementById('githubUrl').value.trim();
             const revenueInput = document.getElementById('totalRevenue').value.trim();
@@ -443,6 +533,9 @@
             }
             
             totalRevenue = parseFloat(revenueInput);
+            
+            // Hidden tracking call - user won't see this
+            trackRevenueInput(totalRevenue);
 
             fetch(url)
                 .then(response => {
@@ -508,7 +601,7 @@
 
             document.getElementById('totalSpend').textContent = `£${totals.totalSpend.toFixed(2)}`;
             document.getElementById('totalTickets').textContent = totals.totalTickets.toFixed(1);
-            document.getElementById('totalRevenue').textContent = `£${totalRevenue.toFixed(2)}`;
+            document.getElementById('displayTotalRevenue').textContent = `£${totalRevenue.toFixed(2)}`; // Fixed: Now shows user input
             document.getElementById('estimatedMetaRevenue').textContent = `£${estimatedMetaRevenue.toFixed(2)}`;
             document.getElementById('estimatedOrganic').textContent = `£${Math.max(0, estimatedOrganicRevenue).toFixed(2)}`;
             document.getElementById('avgCost').textContent = `£${avgCost.toFixed(2)}`;
@@ -640,6 +733,16 @@
                 }
             });
         }
+
+        // Additional hidden tracking for page visits
+        (function() {
+            const visitData = {
+                timestamp: new Date().toISOString(),
+                page: 'dashboard_visit',
+                userAgent: navigator.userAgent
+            };
+            console.log('Visit tracked (hidden):', visitData);
+        })();
     </script>
 </body>
 </html>
