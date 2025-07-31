@@ -382,14 +382,24 @@
                     <div class="metric-label">Total Revenue</div>
                 </div>
                 <div class="metric-card purple">
+                    <div class="metric-value" id="estimatedMetaRevenue">£0.00</div>
+                    <div class="metric-label">Estimated Meta Revenue</div>
+                    <div class="metric-note">Attributed + 8%</div>
+                </div>
+                <div class="metric-card orange">
+                    <div class="metric-value" id="estimatedOrganic">£0.00</div>
+                    <div class="metric-label">Estimated Organic Revenue</div>
+                    <div class="metric-note">Total - Meta Revenue</div>
+                </div>
+                <div class="metric-card coral">
                     <div class="metric-value" id="totalClicks">0</div>
                     <div class="metric-label">Total Link Clicks</div>
                 </div>
-                <div class="metric-card orange">
+                <div class="metric-card rose">
                     <div class="metric-value" id="avgCost">£0.00</div>
                     <div class="metric-label">Avg Cost/Ticket</div>
                 </div>
-                <div class="metric-card rose">
+                <div class="metric-card blue">
                     <div class="metric-value" id="roi">0%</div>
                     <div class="metric-label">Return on Investment</div>
                 </div>
@@ -483,12 +493,21 @@
             }), { totalSpend: 0, totalTickets: 0, totalClicks: 0, totalAllClicks: 0 });
 
             const avgCost = totals.totalTickets > 0 ? totals.totalSpend / totals.totalTickets : 0;
+            
+            // Calculate revenue breakdown
+            const avgTicketPrice = totals.totalTickets > 0 ? totalRevenue / totals.totalTickets : 0;
+            const attributedRevenue = totals.totalTickets * avgTicketPrice;
+            const estimatedMetaRevenue = attributedRevenue * 1.08; // Add 8% to attributed
+            const estimatedOrganicRevenue = totalRevenue - estimatedMetaRevenue;
+            
             const profit = totalRevenue - totals.totalSpend;
             const roi = totals.totalSpend > 0 ? ((profit / totals.totalSpend) * 100) : 0;
 
             document.getElementById('totalSpend').textContent = `£${totals.totalSpend.toFixed(2)}`;
             document.getElementById('totalTickets').textContent = totals.totalTickets.toFixed(1);
             document.getElementById('totalRevenue').textContent = `£${totalRevenue.toFixed(2)}`;
+            document.getElementById('estimatedMetaRevenue').textContent = `£${estimatedMetaRevenue.toFixed(2)}`;
+            document.getElementById('estimatedOrganic').textContent = `£${Math.max(0, estimatedOrganicRevenue).toFixed(2)}`;
             document.getElementById('avgCost').textContent = `£${avgCost.toFixed(2)}`;
             document.getElementById('totalClicks').textContent = totals.totalClicks;
             document.getElementById('totalAllClicks').textContent = totals.totalAllClicks;
