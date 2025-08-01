@@ -89,14 +89,14 @@
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
             max-width: 500px;
             margin: 0 auto 30px;
         }
         
         .url-input, .revenue-input {
             width: 100%;
-            padding: 16px 24px;
+            padding: 20px 28px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 16px;
@@ -109,6 +109,7 @@
         
         .revenue-input {
             border: 2px solid rgba(16, 185, 129, 0.3);
+            padding: 20px 28px;
         }
         
         .url-input::placeholder, .revenue-input::placeholder {
@@ -130,8 +131,9 @@
             color: #10b981;
             font-size: 0.9rem;
             font-weight: 500;
-            margin-bottom: -15px;
+            margin-bottom: -20px;
             text-align: left;
+            padding-left: 4px;
         }
         
         .required-asterisk {
@@ -142,7 +144,7 @@
         .load-button {
             background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
             border: none;
-            padding: 16px 32px;
+            padding: 18px 36px;
             border-radius: 16px;
             color: white;
             font-size: 16px;
@@ -356,19 +358,22 @@
         
         <div class="upload-section">
             <div class="input-group">
-                <input type="text" id="githubUrl" class="url-input" placeholder="Paste the CSV data URL here">
+                <input type="text" id="githubUrl" class="url-input" placeholder="Paste the URL here">
                 <div>
-                    <div class="required-label">Total Revenue <span class="required-asterisk">*</span></div>
-                    <input type="number" id="totalRevenue" class="revenue-input" placeholder="Enter total revenue (e.g., 15000)" step="0.01" min="0" required>
+                    <input type="number" id="totalRevenue" class="revenue-input" placeholder="Enter the revenue *" step="0.01" min="0" required>
                 </div>
             </div>
             <button class="load-button" onclick="loadFromGitHub()">
-                📊 Load Data & Calculate Metrics
+                📊 Load Data
             </button>
         </div>
         
         <div id="dashboard" class="hidden">
             <div class="metrics">
+                <div class="metric-card emerald">
+                    <div class="metric-value" id="displayTotalRevenue">£0.00</div>
+                    <div class="metric-label">Total Revenue</div>
+                </div>
                 <div class="metric-card blue">
                     <div class="metric-value" id="totalSpend">£0.00</div>
                     <div class="metric-label">Total Ad Spend</div>
@@ -377,19 +382,10 @@
                     <div class="metric-value" id="totalTickets">0</div>
                     <div class="metric-label">Attributed Tickets Sold</div>
                 </div>
-                <div class="metric-card emerald">
-                    <div class="metric-value" id="displayTotalRevenue">£0.00</div>
-                    <div class="metric-label">Total Revenue</div>
-                </div>
                 <div class="metric-card purple">
                     <div class="metric-value" id="estimatedMetaRevenue">£0.00</div>
                     <div class="metric-label">Estimated Meta Revenue</div>
                     <div class="metric-note">Attributed + 8%</div>
-                </div>
-                <div class="metric-card orange">
-                    <div class="metric-value" id="estimatedOrganic">£0.00</div>
-                    <div class="metric-label">Estimated Organic Revenue</div>
-                    <div class="metric-note">Total - Meta Revenue</div>
                 </div>
                 <div class="metric-card coral">
                     <div class="metric-value" id="totalClicks">0</div>
@@ -399,13 +395,14 @@
                     <div class="metric-value" id="avgCost">£0.00</div>
                     <div class="metric-label">Avg Cost/Ticket</div>
                 </div>
-                <div class="metric-card blue">
-                    <div class="metric-value" id="roi">0%</div>
-                    <div class="metric-label">Return on Investment</div>
-                </div>
                 <div class="metric-card coral">
                     <div class="metric-value" id="totalAllClicks">0</div>
                     <div class="metric-label">Clicks (All)</div>
+                </div>
+                <div class="metric-card orange">
+                    <div class="metric-value" id="estimatedOrganic">£0.00</div>
+                    <div class="metric-label">Estimated Organic Revenue</div>
+                    <div class="metric-note">Total - Meta Revenue</div>
                 </div>
             </div>
             
@@ -520,9 +517,6 @@
             const metaAttributedRevenue = totals.totalPurchaseValue;
             const estimatedMetaRevenue = metaAttributedRevenue * 1.08;
             const estimatedOrganicRevenue = totalRevenue - estimatedMetaRevenue;
-            
-            const profit = totalRevenue - totals.totalSpend;
-            const roi = totals.totalSpend > 0 ? ((profit / totals.totalSpend) * 100) : 0;
 
             document.getElementById('totalSpend').textContent = `£${totals.totalSpend.toFixed(2)}`;
             document.getElementById('totalTickets').textContent = totals.totalTickets.toFixed(1);
@@ -532,7 +526,6 @@
             document.getElementById('avgCost').textContent = `£${avgCost.toFixed(2)}`;
             document.getElementById('totalClicks').textContent = totals.totalClicks;
             document.getElementById('totalAllClicks').textContent = totals.totalAllClicks;
-            document.getElementById('roi').textContent = `${roi.toFixed(1)}%`;
         }
 
         function createCharts() {
